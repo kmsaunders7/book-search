@@ -1,115 +1,88 @@
-import React, { useState, useEffect } from "react";
-import DeleteBtn from "../components/DeleteBtn";
+import React, { useState } from "react";
 import Jumbotron from "../components/Jumbotron";
-import API from "../utils/API";
-import { Link } from "react-router-dom";
-import { Col, Row, Container } from "../components/Grid";
-import { List, ListItem } from "../components/List";
-import { Input, TextArea, FormBtn } from "../components/Form";
+// import API from "../utils/API";
+import BookList from '../components/BookList'
+import axios from 'axios'
 
-function Books() {
-  // Setting our component's initial state
-  const [books, setBooks] = useState([])
-  const [formObject, setFormObject] = useState({})
 
-  // Load all books and store them with setBooks
-  useEffect(() => {
-    loadBooks()
-  }, [])
 
-  // Loads all books and sets them to books
-  function loadBooks() {
-    API.getBooks()
-      .then(res => 
-        setBooks(res.data)
-      )
-      .catch(err => console.log(err));
-  };
 
-  // Deletes a book from the database with a given id, then reloads books from the db
-  function deleteBook(id) {
-    API.deleteBook(id)
-      .then(res => loadBooks())
-      .catch(err => console.log(err));
-  }
+function Search() {
+    // Setting our component's initial state
+    const [books, setBooks] = useState([])
+    const [formObject, setFormObject] = useState({})
 
-  // Handles updating component state when the user types into the input field
-  function handleInputChange(event) {
-    const { name, value } = event.target;
-    setFormObject({...formObject, [name]: value})
-  };
 
-  // When the form is submitted, use the API.saveBook method to save the book data
-  // Then reload books from the database
-  function handleFormSubmit(event) {
-    event.preventDefault();
-    if (formObject.title && formObject.author) {
-      API.saveBook({
-        title: formObject.title,
-        author: formObject.author,
-        synopsis: formObject.synopsis
-      })
-        .then(res => loadBooks())
-        .catch(err => console.log(err));
-    }
-  };
+    // Handles updating component state when the user types into the input field
+    const handleInputChange = (event) => {
+        setFormObject(event.target.value)
+    };
+
+    // When the form is submitted, use the API.saveBook method to save the book data
+    // Then reload books from the database
+    const handleFormSubmit = (event) => {
+        event.preventDefault();
+        if (formObject) {
+            const query = formObject
+            axios.get(`https://www.googleapis.com/books/v1/volumes?q=${query}`)
+                .then(res => {
+                    console.log(res.data.items)
+                    setBooks(res.data.items)
+                }).then(() => setFormObject(''))
+                .catch(err => console.log(err));
+        }
+    };
+  
 
     return (
-      <Container fluid>
-        <Row>
-          <Col size="md-6">
-            <Jumbotron>
-              <h1>Google Books Search</h1>
-            </Jumbotron>
-            <form>
-              <Input
-                onChange={handleInputChange}
-                name="title"
-                placeholder="Title (required)"
-              />
-              <Input
-                onChange={handleInputChange}
-                name="author"
-                placeholder="Author (required)"
-              />
-              <TextArea
-                onChange={handleInputChange}
-                name="synopsis"
-                placeholder="Synopsis (Optional)"
-              />
-              <FormBtn
-                disabled={!(formObject.author && formObject.title)}
-                onClick={handleFormSubmit}
-              >
-                Submit Book
-              </FormBtn>
+      <>
+      <Jumbotron />
+        <div className='searchForm'>
+            <form className='form'>
+                <div className='form-group'>
+                    <input
+                     type='text'
+                     className='form-control'
+                     placeholder='Search...'
+                     onChange={handleInputChange}
+                    />
+                </div>
+                <button
+                 type='submit'
+                 className='btn btn-primary'
+                 onClick={handleFormSubmit}
+                >
+                SUBMIT
+                </button>
             </form>
-          </Col>
-          <Col size="md-6 sm-12">
-            <Jumbotron>
-              <h1>Books On My List</h1>
-            </Jumbotron>
-            {books.length ? (
-              <List>
-                {books.map(book => (
-                  <ListItem key={book._id}>
-                    <Link to={"/books/" + book._id}>
-                      <strong>
-                        {book.title} by {book.author}
-                      </strong>
-                    </Link>
-                    <DeleteBtn onClick={() => deleteBook(book._id)} />
-                  </ListItem>
-                ))}
-              </List>
-            ) : (
-              <h3>No Results to Display</h3>
-            )}
-          </Col>
-        </Row>
-      </Container>
+        </div>
+
+        <div className='row'>
+            <div className='col-md-12'>
+            
+                <div className='resultCards'>
+                 <p> Search Results: </p>
+                 <ul>
+                    {books.map(book => (
+                       <BookList
+                         key={book.id}
+                         id={book.id}
+                         title={book.volumeInfo.title}
+                         authors={book.volumeInfo.authors}
+                         image={book.volumeInfo.imageLinks.thumbnail}
+                         description={book.volumeInfo.description}
+                         link={book.volumeInfo.infoLink}
+                        />
+                      )
+                     )}
+                 </ul>
+                </div> 
+
+            </div>     
+        </div>
+     </>
     );
   }
 
 
-export default Books;
+export default Search;

@@ -1,21 +1,23 @@
+import { BrowserRouter as Router, Route, Switch } from "express";
 import React from "react";
 import "./App.css";
-import BookList from "./components/BookList";
-import Heading from "./components/Heading";
-import SearchBar from "./components/SearchBar";
+import Search from "./pages/Search";
+import Saved from "./pages/Saved"
+import Nav from "./components/Nav"
 
 function App() {
   
   return (
-    <div className='container-fluid'>
-      <div className='row d-flex align-items-center mt-4 mb-4 '>
-        <Heading heading="Books"/>
-        <SearchBar />
-      </div>
-      <div className='row'>
-        <BookList />
-      </div>
-    </div>
+    <>
+      <Router>
+      <Nav />
+      <Switch>
+        <Route exact path='/' component={Search} />
+        <Route exact path='/search' component={Search} />
+        <Route exact path='/saved' component={Saved} />
+    </Switch>
+    </Router>
+    </>
   );
 }
 
